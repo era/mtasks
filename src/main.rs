@@ -1,7 +1,9 @@
 use clap::Parser;
 use clap::Subcommand;
 use std::io::Write;
+use std::io::{self, prelude::*, BufReader};
 use std::path::PathBuf;
+use std::process::exit;
 
 #[derive(Debug)]
 enum Error {
@@ -23,8 +25,14 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Action {
-    Create { title: String },
-    List {},
+    Create {
+        title: String,
+    },
+    /// List the tasks done at day
+    List {
+        /// day must be %Y%m%d
+        day: String,
+    },
 }
 
 fn main() {
@@ -32,18 +40,31 @@ fn main() {
 
     match args.action {
         Action::Create { title } => create(title).unwrap(),
-        Action::List {} => todo!(),
+        Action::List { day } => list(day).unwrap(),
     }
 }
 
-fn create(title: String) -> Result<()> {
-    let mut path = get_home_dir();
-    path.push(".mtasks");
-    if !path.exists() {
-        std::fs::create_dir(&path).expect("failed to create .mtask folder on $HOME dir");
+fn list(day: String) -> Result<()> {
+    let mut path = get_mtask_path(&day);
+    let mut file = std::fs::OpenOptions::new().read(true).open(&path);
+    match file {
+        Ok(file) => {
+            let mut reader = BufReader::new(file);
+            for line in reader.lines() {
+                let line = line.unwrap();
+                println!("{line}");
+            }
+        }
+        Err(e) => {
+            println!("error while reading file {:?}, error: {:?}", path, e);
+            exit(-1);
+        }
     }
+    Ok(())
+}
 
-    path.push(&get_curr_day());
+fn create(title: String) -> Result<()> {
+    let mut path = get_mtask_path(&get_curr_day());
 
     let mut file = std::fs::OpenOptions::new()
         .write(true)
@@ -59,10 +80,18 @@ fn create(title: String) -> Result<()> {
     Ok(())
 }
 
+fn get_mtask_path(day: &str) -> PathBuf {
+    let mut path = get_home_dir();
+    path.push(".mtasks");
+    if !path.exists() {
+        std::fs::create_dir(&path).expect("failed to create .mtask folder on $HOME dir");
+    }
+    path.push(format!("task_{day}"));
+    path
+}
+
 fn get_curr_day() -> String {
-    chrono::offset::Local::now()
-        .format("task_%Y%m%d")
-        .to_string()
+    chrono::offset::Local::now().format("%Y%m%d").to_string()
 }
 
 fn get_home_dir() -> PathBuf {
