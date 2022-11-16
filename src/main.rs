@@ -1,14 +1,12 @@
 use clap::Parser;
 use clap::Subcommand;
 use std::io::Write;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use std::process::exit;
 
 #[derive(Debug)]
-enum Error {
-    UNKNOWN,
-}
+enum Error {}
 
 type Result<T> = core::result::Result<T, Error>;
 
@@ -25,14 +23,30 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Action {
+    /// Adds a task to your today's list
     Create {
+        /// The description or title of your task
         title: String,
     },
     /// List the tasks done at day
     List {
-        /// day must be %Y%m%d
-        day: String,
+        /// lists tasks from day
+        /// format must be %Y%m%d
+        #[arg(short, long)]
+        day: Option<String>,
+        /// lists latest file tasks
+        #[arg(short, long)]
+        last_day: bool,
+        /// lists today tasks
+        #[arg(short, long)]
+        today: bool,
     },
+}
+
+enum Day {
+    Date(String),
+    Today,
+    LastDay,
 }
 
 fn main() {
@@ -40,23 +54,44 @@ fn main() {
 
     match args.action {
         Action::Create { title } => create(title).unwrap(),
-        Action::List { day } => list(day).unwrap(),
+        Action::List {
+            day: None,
+            last_day: true,
+            today: false,
+        } => list(Day::LastDay).unwrap(),
+        Action::List {
+            day: None,
+            last_day: false,
+            today: true,
+        } => list(Day::Today).unwrap(),
+        Action::List {
+            day: Some(date),
+            last_day: false,
+            today: false,
+        } => list(Day::Date(date)).unwrap(),
+        Action::List { .. } => panic!("user is using it wrong"),
     }
 }
 
-fn list(day: String) -> Result<()> {
-    let mut path = get_mtask_path(&day);
-    let mut file = std::fs::OpenOptions::new().read(true).open(&path);
+fn list(day: Day) -> Result<()> {
+    let day = match day {
+        Day::Date(date) => date,
+        Day::Today => get_curr_day(),
+        Day::LastDay => todo!(),
+    };
+    let path = get_mtask_path(&day);
+    let file = std::fs::OpenOptions::new().read(true).open(&path);
     match file {
         Ok(file) => {
-            let mut reader = BufReader::new(file);
+            let reader = BufReader::new(file);
             for line in reader.lines() {
                 let line = line.unwrap();
                 println!("{line}");
             }
         }
         Err(e) => {
-            println!("error while reading file {:?}, error: {:?}", path, e);
+            println!("Error while trying to open file");
+            eprintln!("file: {:?}\nerror: {:?}", path, e);
             exit(-1);
         }
     }
@@ -64,7 +99,7 @@ fn list(day: String) -> Result<()> {
 }
 
 fn create(title: String) -> Result<()> {
-    let mut path = get_mtask_path(&get_curr_day());
+    let path = get_mtask_path(&get_curr_day());
 
     let mut file = std::fs::OpenOptions::new()
         .write(true)

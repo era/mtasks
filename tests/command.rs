@@ -26,6 +26,7 @@ mod tests {
             .success();
         mtask(&temp_dir.path())
             .arg("list")
+            .arg("-d")
             .arg(day)
             .assert()
             .success()
