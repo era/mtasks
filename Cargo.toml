@@ -8,6 +8,7 @@ about = "something something"
 [dependencies]
 chrono = "0.4.22"
 clap = {version="4.0.22", features=["derive"]} 
+regex = "1.7.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.6"

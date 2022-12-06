@@ -1,5 +1,6 @@
 use clap::Parser;
 use clap::Subcommand;
+use regex::Regex;
 use std::io::Write;
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
@@ -27,6 +28,9 @@ enum Action {
     Create {
         /// The description or title of your task
         title: String,
+        /// day that you want to add if not set, today is picked
+        #[arg(short, long)]
+        day: Option<String>,
     },
     /// List the tasks done at day
     List {
@@ -53,7 +57,11 @@ fn main() {
     let args = Args::parse();
 
     match args.action {
-        Action::Create { title } => create(title).unwrap(),
+        Action::Create { title, day: None } => create(title, get_curr_day()).unwrap(),
+        Action::Create {
+            title,
+            day: Some(day),
+        } => create(title, day).unwrap(),
         Action::List {
             day: None,
             last_day: true,
@@ -77,7 +85,7 @@ fn list(day: Day) -> Result<()> {
     let day = match day {
         Day::Date(date) => date,
         Day::Today => get_curr_day(),
-        Day::LastDay => todo!(),
+        Day::LastDay => get_last_day(),
     };
     let path = get_mtask_path(&day);
     let file = std::fs::OpenOptions::new().read(true).open(&path);
@@ -98,8 +106,33 @@ fn list(day: Day) -> Result<()> {
     Ok(())
 }
 
-fn create(title: String) -> Result<()> {
-    let path = get_mtask_path(&get_curr_day());
+fn get_last_day() -> String {
+    // if there is no "last day" we panic with the user error message
+    // we list the files in the folder, sort and get the last that is not today
+    let files = std::fs::read_dir(get_mtask_dir()).unwrap();
+    let curr_day = get_curr_day();
+    let mut files: Vec<String> = files
+        .map(|file| {
+            file.unwrap()
+                .file_name()
+                .into_string()
+                .unwrap()
+                .replace("task_", "")
+        })
+        .filter(|file_name| file_name != &curr_day)
+        .collect();
+
+    files.sort();
+    files.get(files.len() - 1).unwrap().to_owned()
+}
+fn create(title: String, day: String) -> Result<()> {
+    let date_re = Regex::new(r"^\d{4}\d{2}\d{2}$").unwrap();
+
+    if !date_re.is_match(&day) {
+        panic!("the date {day} is not valid, correct format is YYYYmmdd");
+    }
+
+    let path = get_mtask_path(&day);
 
     let mut file = std::fs::OpenOptions::new()
         .write(true)
@@ -115,12 +148,17 @@ fn create(title: String) -> Result<()> {
     Ok(())
 }
 
-fn get_mtask_path(day: &str) -> PathBuf {
+fn get_mtask_dir() -> PathBuf {
     let mut path = get_home_dir();
     path.push(".mtasks");
     if !path.exists() {
         std::fs::create_dir(&path).expect("failed to create .mtask folder on $HOME dir");
     }
+    path
+}
+
+fn get_mtask_path(day: &str) -> PathBuf {
+    let mut path = get_mtask_dir();
     path.push(format!("task_{day}"));
     path
 }
