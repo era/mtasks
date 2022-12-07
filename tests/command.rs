@@ -21,20 +21,20 @@ mod tests {
         let task = "such a cool day";
         let temp_dir = TempDir::new("mstak_fixture").expect("could not create tempdir");
 
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("create")
             .arg("should not be there")
             .assert()
             .success();
 
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("create")
             .arg(task)
             .arg("-d")
             .arg(day)
             .assert()
             .success();
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("list")
             .arg("-l")
             .assert()
@@ -47,12 +47,12 @@ mod tests {
         let day = chrono::offset::Local::now().format("%Y%m%d").to_string();
         let today_task = "such a cool day";
         let temp_dir = TempDir::new("mstak_fixture").expect("could not create tempdir");
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("create")
             .arg(today_task)
             .assert()
             .success();
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("list")
             .arg("-d")
             .arg(day)
@@ -66,14 +66,14 @@ mod tests {
         let day = "20221106";
         let task = "such a cool day";
         let temp_dir = TempDir::new("mstak_fixture").expect("could not create tempdir");
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("create")
             .arg(task)
             .arg("-d")
             .arg(day)
             .assert()
             .success();
-        mtask(&temp_dir.path())
+        mtask(temp_dir.path())
             .arg("list")
             .arg("-d")
             .arg(day)

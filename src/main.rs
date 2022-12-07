@@ -123,7 +123,7 @@ fn get_last_day() -> String {
         .collect();
 
     files.sort();
-    files.get(files.len() - 1).unwrap().to_owned()
+    files.last().unwrap().to_owned()
 }
 fn create(title: String, day: String) -> Result<()> {
     let date_re = Regex::new(r"^\d{4}\d{2}\d{2}$").unwrap();
@@ -141,8 +141,8 @@ fn create(title: String, day: String) -> Result<()> {
         .open(path)
         .expect("could not create a file for today");
 
-    file.write(title.as_bytes()).unwrap();
-    file.write("\n".as_bytes()).unwrap();
+    file.write_all(title.as_bytes()).unwrap();
+    file.write_all("\n".as_bytes()).unwrap();
     println!("task added");
 
     Ok(())
