@@ -123,8 +123,13 @@ fn get_last_day() -> String {
         .collect();
 
     files.sort();
-    files.last().unwrap().to_owned()
+
+    match files.last() {
+        Some(e) => e.to_owned(),
+        None => panic!("You have not done anything in the past (no tasks added to mtask)"),
+    }
 }
+
 fn create(title: String, day: String) -> Result<()> {
     let date_re = Regex::new(r"^\d{4}\d{2}\d{2}$").unwrap();
 
