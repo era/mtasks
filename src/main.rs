@@ -2,9 +2,9 @@ use clap::Parser;
 use clap::Subcommand;
 use regex::Regex;
 use std::io::Write;
-use std::io::{prelude::*, BufReader};
+
 use std::path::PathBuf;
-use std::process::exit;
+
 
 #[derive(Debug)]
 enum Error {}
