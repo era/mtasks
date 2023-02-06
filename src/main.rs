@@ -88,21 +88,8 @@ fn list(day: Day) -> Result<()> {
         Day::LastDay => get_last_day(),
     };
     let path = get_mtask_path(&day);
-    let file = std::fs::OpenOptions::new().read(true).open(&path);
-    match file {
-        Ok(file) => {
-            let reader = BufReader::new(file);
-            for line in reader.lines() {
-                let line = line.unwrap();
-                println!("{line}");
-            }
-        }
-        Err(e) => {
-            println!("Error while trying to open file");
-            eprintln!("file: {:?}\nerror: {:?}", path, e);
-            exit(-1);
-        }
-    }
+    let tasks = std::fs::read_to_string(path).expect("Could not read file {path}.");
+    println!("{tasks}");
     Ok(())
 }
 
