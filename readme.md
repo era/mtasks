@@ -19,3 +19,21 @@ instead of using Result enum.
 ```shell
 cargo install --git https://codeberg.org/era/mtasks/
 ```
+
+## Using
+
+```shell
+$ mtasks --help
+A cool CLI to track your daily tasks
+
+Usage: mtasks <COMMAND>
+
+Commands:
+  create  Adds a task to your today's list
+  list    List the tasks done at day
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```

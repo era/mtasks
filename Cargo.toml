@@ -1,8 +1,8 @@
 [package]
-name = "mtask"
+name = "mtasks"
 version = "0.1.0"
 edition = "2021"
-about = "something something"
+about = "mtasks is a simple way to track your daily tasks to tell your co-workers next working day"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
